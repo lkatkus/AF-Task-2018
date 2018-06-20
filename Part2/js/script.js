@@ -63,23 +63,26 @@ const init = () => {
 // Sorts requestQueue based on request priority
 const sortRequestQueue = () => {
     requestQueue.sort((a, b) => {
-        let priorityA = a.priority;
-        let priorityB = b.priority;
-
-        if(priorityA > priorityB){
+        if(a.priority > b.priority){
             return 1;
         }
-        if(priorityA < priorityB){
+        if(a.priority < b.priority){
             return -1;
         }
-        return 0;
+        if(a.priority === b.priority){
+            // For sorting requests by id if priority is the same
+            if(a.id > b.id){
+                return 1;
+            }
+            return -1;
+        }
     })
 };
 
 // Creates an request execution queue array
 const createExecutionQueue = () => {
     return new Promise((resolve, reject) => {
-        while(executionQueue.length < 5 && requestQueue.length > 0){
+        while(executionQueue.length < maxSent && requestQueue.length > 0){
             executionQueue.push(requestQueue.shift());
         }
         resolve();
@@ -94,7 +97,7 @@ const sendRequests = () => {
 
     // Empty executionQueue after sending
     while(executionQueue.length > 0){
-        finishedRequests.push(executionQueue.shift());
+        finishedRequests.push(executionQueue.shift());executionQueue
     }
 
     // Check if there are still requests in requestQueue
