@@ -1,3 +1,6 @@
+// NOTE
+// Please copy citylots.json file to ./json folder before starting
+
 // Dependency imports
 const fs = require('fs');
 
@@ -7,6 +10,8 @@ let regex = /(?:"STREET": ")(\w*)"/g; /* Regular expression template */
 
 // Start file reading stream
 let stream = fs.createReadStream('./json/citylots.json');
+
+console.log('Trying to fetch data. Please wait.');
 
 // Stream event listener for receiving data chunk
 stream.on('data', (chunk) => {
@@ -22,6 +27,11 @@ stream.on('end', () => {
     // Display all street names
     console.log(arr.sort().join(', '));
 });
+
+// Stream error handler
+stream.on('error', (err) => {
+    console.log('Unable to fetch data. Please check if citylots.json is present', err);
+})
 
 // Parse stream data chunk
 const parseData = (string, regex) => {
