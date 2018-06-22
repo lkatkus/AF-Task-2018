@@ -37,7 +37,6 @@ const init = () => {
                     if(requestQueue.length === totalRequests){
                         // Sort array by priority
                         sortRequestQueue();
-
                         resolve();
                     }
                 }
@@ -54,6 +53,12 @@ const init = () => {
         .then(() => {
             console.log('====== SENDING FIRST REQUEST BATCH ======');
             sendRequests();
+        })
+        .then(() => {
+            console.log('====== ALL REQUESTS HAVE BEEN SENT ======');
+            console.log(executionQueue);
+            console.log(requestQueue);
+            console.log(finishedRequests);
         })
         .catch((err) => {
             console.log(err);
@@ -81,34 +86,32 @@ const sortRequestQueue = () => {
 
 // Creates an request execution queue array
 const createExecutionQueue = () => {
-    return new Promise((resolve, reject) => {
-        while(executionQueue.length < maxSent && requestQueue.length > 0){
-            executionQueue.push(requestQueue.shift());
-        }
-        resolve();
-    });
+    while(executionQueue.length < maxSent && requestQueue.length > 0){
+        executionQueue.push(requestQueue.shift());
+    }
 };
 
 // Sends all requests that are currently executionQueue
 const sendRequests = () => {
-    for(let i = 0; i < executionQueue.length; i++){
-        console.log(executionQueue[i].sendRequest());
-    };
+    return new Promise((resolve, reject) => {
+        if(executionQueue.length === maxSent && requestQueue.length >= 0){
+            for(let i = 0; i < executionQueue.length; i++){
+                console.log(executionQueue[i].sendRequest());
+            };
+            // Empty executionQueue after sending
+            while(executionQueue.length > 0){
+                finishedRequests.push(executionQueue.shift());
+            }
 
-    // Empty executionQueue after sending
-    while(executionQueue.length > 0){
-        finishedRequests.push(executionQueue.shift());executionQueue
-    }
-
-    // Check if there are still requests in requestQueue
-    if(requestQueue.length > 0){
-        createExecutionQueue()
-            .then(() => {
+            // Check if there are still requests in requestQueue
+            if(requestQueue.length > 0){
+                createExecutionQueue()
                 console.log('====== SENDING NEXT REQUEST BATCH ======');
                 sendRequests();
-            })
-    }else{
-        console.log('====== ALL REQUESTS HAVE BEEN SENT ======');
-        console.log(finishedRequests);
-    }
+            }
+        }else{
+            // If all request from requestQueue and executionQueue have been sent, then resolve()
+            resolve();
+        }
+    })
 }
